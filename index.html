@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>小公主乐园 🏰</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff8fb8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="公主乐园">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
 :root{--pink:#ff8fb8;--pink2:#ffc2d9;--purple:#a06ee8;--gold:#ffb52e;--bg1:#ffe9f3;--bg2:#f3e8ff;--card:#fff;--text:#5a3b5d}
@@ -734,6 +740,8 @@ document.getElementById('mask').addEventListener('click',e=>{if(e.target.id==='m
 
 /* 启动 */
 ensureDay();renderPage();setInterval(tick,1000);
+/* PWA 离线支持 */
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){})})}
 </script>
 </body>
 </html>
