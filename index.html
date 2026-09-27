@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>小公主乐园 🏰</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+:root{--pink:#ff8fb8;--pink2:#ffc2d9;--purple:#a06ee8;--gold:#ffb52e;--bg1:#ffe9f3;--bg2:#f3e8ff;--card:#fff;--text:#5a3b5d}
+html,body{height:100%}
+body{background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--text);padding-bottom:86px;user-select:none}
+#app{max-width:560px;margin:0 auto;padding:12px}
+/* header */
+#hdr{background:linear-gradient(135deg,#ff9fc6,#b98ef2);border-radius:20px;padding:12px 16px;color:#fff;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 18px rgba(200,120,220,.35);position:relative}
+#hdr .t1{font-size:19px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.15)}
+#hdr .t2{font-size:12px;opacity:.92;margin-top:2px}
+#starbox{background:rgba(255,255,255,.25);border-radius:16px;padding:6px 12px;text-align:center;font-weight:700}
+#starbox .n{font-size:20px}
+#hdr .lock{position:absolute;right:10px;bottom:-16px;background:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 8px rgba(0,0,0,.15);cursor:pointer}
+.bonus-chip{display:inline-block;background:#fff7;color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:6px}
+/* nav */
+#nav{position:fixed;bottom:0;left:0;right:0;background:#fff;box-shadow:0 -4px 16px rgba(180,120,200,.18);display:flex;max-width:560px;margin:0 auto;z-index:50}
+#nav div{flex:1;text-align:center;padding:9px 0 7px;font-size:11px;color:#b096b5;cursor:pointer}
+#nav div .i{font-size:23px;display:block}
+#nav div.on{color:var(--purple);font-weight:700}
+/* generic */
+h2.pg{font-size:17px;margin:16px 4px 10px;display:flex;align-items:center;gap:6px}
+.card{background:var(--card);border-radius:18px;padding:14px;box-shadow:0 4px 14px rgba(200,140,210,.14);margin-bottom:10px}
+.btn{display:inline-block;border:none;border-radius:14px;padding:10px 18px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--pink),var(--purple));box-shadow:0 4px 10px rgba(200,100,180,.35)}
+.btn.gray{background:#d9cfe0;box-shadow:none;color:#8a7a92}
+.btn.gold{background:linear-gradient(135deg,#ffc44d,#ff9a2e);box-shadow:0 4px 10px rgba(255,170,50,.4)}
+.btn.mini{padding:6px 12px;font-size:13px;border-radius:11px}
+/* task rows */
+.task{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:12px 14px;margin-bottom:9px;box-shadow:0 3px 10px rgba(200,140,210,.13)}
+.task .ic{font-size:30px}
+.task .mid{flex:1}
+.task .nm{font-size:16px;font-weight:700}
+.task .tm{font-size:12px;color:#b08fb6;margin-top:1px}
+.task .st{font-size:12px;color:#e88f00;font-weight:700;background:#fff3d6;border-radius:9px;padding:2px 8px}
+.task .chk{width:46px;height:46px;border-radius:50%;border:3px solid #e8cdea;background:#faf4fb;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.task.done{background:#fdeaf3;border:1.5px solid #ffb9d4}
+.task.done .chk{background:#ff5fa2;border-color:#ff5fa2;color:#fff}
+.task.locked{opacity:.55}
+.praise{font-size:12px;color:#e0559a;margin-top:2px;display:none}
+/* progress bar */
+.bar{background:#f0e4f4;border-radius:10px;height:14px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,#ff8fb8,#ffb52e);transition:width .5s}
+/* cards grid */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ccard{background:#fff;border-radius:14px;padding:10px 6px;text-align:center;box-shadow:0 3px 9px rgba(190,140,210,.16);position:relative;border:2px solid transparent}
+.ccard .ce{font-size:34px}
+.ccard .cn{font-size:12px;font-weight:700;margin-top:3px}
+.ccard.r1{border-color:#f0d9ea}
+.ccard.r2{border-color:#6db5ff;box-shadow:0 0 10px rgba(110,180,255,.55)}
+.ccard.r3{border-color:#b06ef2;box-shadow:0 0 14px rgba(220,120,255,.75);background:linear-gradient(160deg,#fff,#fdefff)}
+.ccard.r3::after{content:"传说";position:absolute;top:-8px;right:-6px;background:linear-gradient(135deg,#c56ef2,#ff7ac8);color:#fff;font-size:10px;border-radius:9px;padding:1px 7px}
+.ccard.r2::after{content:"闪卡";position:absolute;top:-8px;right:-6px;background:#4da3ff;color:#fff;font-size:10px;border-radius:9px;padding:1px 7px}
+.ccard.unknown .ce{filter:grayscale(1) brightness(1.6);opacity:.35}
+.ccard.unknown .cn{color:#c3aecb}
+.ccard .dup{font-size:10px;color:#e88f00;margin-top:2px}
+/* badges */
+.bgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.badge{background:#fff;border-radius:16px;padding:14px 10px;text-align:center;box-shadow:0 3px 9px rgba(190,140,210,.14)}
+.badge .be{font-size:34px;filter:grayscale(1);opacity:.35}
+.badge.got .be{filter:none;opacity:1}
+.badge.got{background:linear-gradient(160deg,#fff,#fff3d9);border:2px solid #ffcf6e}
+.badge .bn{font-size:13px;font-weight:700;margin-top:4px}
+.badge .bd{font-size:11px;color:#b096b5;margin-top:2px}
+.badge.got .bd{color:#d18a00}
+/* shop */
+.shopItem{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:12px 14px;margin-bottom:9px;box-shadow:0 3px 10px rgba(200,140,210,.13)}
+.shopItem .ic{font-size:30px}
+/* modal */
+#mask{position:fixed;inset:0;background:rgba(90,40,90,.45);display:none;z-index:100;align-items:center;justify-content:center;padding:20px}
+#mask.show{display:flex}
+#modal{background:#fff;border-radius:22px;max-width:460px;width:100%;max-height:84vh;overflow-y:auto;padding:20px;position:relative}
+#modal .x{position:absolute;top:10px;right:14px;font-size:22px;cursor:pointer;color:#c9a9cf}
+/* overlays */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden}
+.confetti{position:absolute;width:10px;height:14px;top:-20px;border-radius:3px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.7}}
+@keyframes pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes flyup{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-90px);opacity:0}}
+.flystar{position:fixed;font-size:26px;z-index:300;animation:flyup 1s forwards;pointer-events:none}
+.bigpop{animation:pop .5s}
+@keyframes ringk{0%,100%{transform:rotate(0)}25%{transform:rotate(20deg)}75%{transform:rotate(-20deg)}}
+.bell{display:inline-block;animation:ringk .6s infinite}
+/* card reveal */
+#reveal{position:fixed;inset:0;background:rgba(60,20,70,.8);display:none;z-index:250;align-items:center;justify-content:center}
+#reveal.show{display:flex}
+#rcard{width:180px;height:250px;border-radius:18px;background:linear-gradient(160deg,#7b4bb8,#c76bd8);display:flex;align-items:center;justify-content:center;font-size:70px;cursor:pointer;animation:pop .4s;box-shadow:0 0 40px rgba(255,160,255,.8);color:#fff;flex-direction:column;gap:8px}
+#rcard.flip{animation:flipIn .6s}
+@keyframes flipIn{0%{transform:rotateY(90deg) scale(.6)}100%{transform:rotateY(0) scale(1)}}
+/* parent panel */
+.psec{margin-bottom:14px}
+.psec h4{font-size:14px;color:var(--purple);margin-bottom:6px}
+.prow{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.prow input,.prow select{border:1.5px solid #e6d5ec;border-radius:9px;padding:7px 8px;font-size:13px;min-width:0}
+.prow input.w1{width:52px}.prow input.w2{flex:1}.prow input.w3{width:64px}
+.pf{display:flex;flex-direction:column;gap:3px;font-size:12px;color:#8a6f92;margin-bottom:8px}
+.pf input{border:1.5px solid #e6d5ec;border-radius:9px;padding:8px;font-size:14px}
+.note{font-size:12px;color:#a98fb0;background:#faf2fd;border-radius:10px;padding:8px 10px;margin:6px 0}
+.tipbanner{background:#fff7e0;border:1.5px dashed #ffce6e;border-radius:14px;padding:9px 12px;font-size:13px;color:#b57e00;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div><div class="t1" id="hTitle">🏰 小公主乐园</div><div class="t2" id="hSub">今天也要闪闪发光哦 ✨</div></div>
+    <div id="starbox"><div class="n" id="hStars">0 ⭐</div><div style="font-size:11px" id="hBonus"></div></div>
+    <div class="lock" onclick="openParent()">🔒</div>
+  </div>
+  <div id="page"></div>
+</div>
+<div id="nav">
+  <div data-p="today" class="on"><span class="i">🏠</span>今日</div>
+  <div data-p="cal"><span class="i">📅</span>日历</div>
+  <div data-p="draw"><span class="i">🎴</span>抽卡</div>
+  <div data-p="album"><span class="i">📖</span>图鉴</div>
+  <div data-p="badges"><span class="i">👑</span>徽章</div>
+  <div data-p="shop"><span class="i">🎁</span>奖励</div>
+</div>
+<div id="mask"><div id="modal"><span class="x" onclick="closeModal()">✕</span><div id="mbody"></div></div></div>
+<div id="reveal" onclick="null"><div id="rcard">🎴<div style="font-size:15px">点我翻开!</div></div></div>
+<div id="fx"></div>
+<script>
+'use strict';
+/* ================= 数据 ================= */
+const KEY='princess_park_v1';
+const DEFAULT={
+  v:1,password:'1234',
+  stars:0,starsTotal:0,streak:0,tickets:0,noNewDays:0,prizeWon:false,
+  today:{date:'',checked:[],studyDone:[],poolDone:[],redeemed:[],lastCompletion:0},
+  yesterdayCompletion:0,
+  cards:{},badges:[],
+  counters:{report:0,dinner:0,bath:0,study:0,story:0,sleep:0,wake:0,breakfast:0,pool:0},
+  tasks:{
+    weekday:[
+      {id:'report',icon:'🏰',name:'城堡报到',time:'17:30 到家',stars:1},
+      {id:'dinner',icon:'🍚',name:'晚餐自己吃',time:'18:00',stars:2},
+      {id:'bath',icon:'🛁',name:'洗澡洗白白',time:'19:00 前完成',stars:2},
+      {id:'study',icon:'🎓',name:'学习闯关',time:'19:30 自选3关',stars:0,study:true},
+      {id:'ipad',icon:'📱',name:'iPad 时间',time:'20:00 (全部完成解锁)',stars:0,auto:true},
+      {id:'story',icon:'📚',name:'睡前绘本',time:'20:20',stars:2},
+      {id:'sleep',icon:'🌙',name:'准时睡觉',time:'21:00',stars:2}],
+    weekend:[
+      {id:'wake',icon:'🌅',name:'早起不赖床',time:'8:30',stars:2},
+      {id:'breakfast',icon:'🥣',name:'早餐+早读10分钟',time:'9:00',stars:2},
+      {id:'pool',icon:'🎯',name:'周末小任务',time:'10:00 任选2项',stars:0,pool:true}]},
+  poolTasks:[
+    {icon:'🧹',name:'帮忙做家务',stars:2},{icon:'🎨',name:'画画/手工',stars:1},
+    {icon:'⚽',name:'户外运动30分钟',stars:2},{icon:'🧩',name:'拼图/益智游戏',stars:1}],
+  levels:[
+    {icon:'🔤',name:'识字关',desc:'认5个新字或复习字卡',stars:2},
+    {icon:'🔢',name:'数字关',desc:'数数/10以内加减',stars:2},
+    {icon:'🗣️',name:'英语关',desc:'跟读单词或唱儿歌',stars:2},
+    {icon:'🎨',name:'创意关',desc:'画画/剪纸/手工',stars:1},
+    {icon:'🧠',name:'智力关',desc:'拼图/找不同/迷宫',stars:1},
+    {icon:'📖',name:'阅读关',desc:'亲子共读并复述',stars:2},
+    {icon:'✍️',name:'握笔关',desc:'描红/写数字一页',stars:2}],
+  shop:[
+    {icon:'🍦',name:'楼下放风+冰淇淋',stars:30},
+    {icon:'📺',name:'动画片加时20分钟',stars:40},
+    {icon:'🍰',name:'烘焙日/吃甜品',stars:60},
+    {icon:'🎠',name:'小游乐场一次',stars:100}],
+  series:[
+    {name:'🏰 城堡公主系列',cards:[
+      {n:'白雪公主',e:'🍎',r:1},{n:'灰姑娘',e:'🕰️',r:1},{n:'睡美人',e:'🌹',r:1},
+      {n:'长发公主',e:'💐',r:1},{n:'小美人鱼',e:'🧜‍♀️',r:1},{n:'贝儿公主',e:'💛',r:1},
+      {n:'茉莉公主',e:'🕌',r:2},{n:'仙女教母',e:'✨',r:2},{n:'南瓜马车',e:'🎃',r:2},
+      {n:'水晶鞋',e:'👠',r:3}]},
+    {name:'🦄 魔法伙伴系列',cards:[
+      {n:'独角兽',e:'🦄',r:1},{n:'魔法仙女',e:'🧚',r:1},{n:'小飞龙',e:'🐉',r:1},
+      {n:'星星精灵',e:'🌟',r:1},{n:'月亮兔',e:'🐰',r:1},{n:'彩虹鸟',e:'🌈',r:1},
+      {n:'魔法书',e:'🪄',r:2},{n:'星光蝶',e:'🦋',r:2},{n:'月光天鹅',e:'🦢',r:2},
+      {n:'冰雪女王',e:'❄️',r:3}]}],
+  prize:{name:'🎡 游乐场一日游',starGoal:300},
+  alarms:[
+    {id:'a1',time:'17:30',label:'🏰 城堡报到',on:true,r:'wk'},
+    {id:'a2',time:'19:30',label:'🎓 学习闯关',on:true,r:'every'},
+    {id:'a3',time:'20:20',label:'📚 睡前绘本',on:true,r:'every'},
+    {id:'a4',time:'21:00',label:'🌙 准时睡觉',on:true,r:'every'},
+    {id:'a5',time:'8:30',label:'🌅 早起不赖床',on:true,r:'we'}],
+  history:{},alarmLog:{},
+  praise:['太棒了,小公主!','哇,又进步啦!','你是最棒的!','公主好厉害!','闪闪发光的你!','继续加油哦,亲爱的!']
+};
+let S=load();
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.v===1){if(!d.alarms)d.alarms=JSON.parse(JSON.stringify(DEFAULT.alarms));if(!d.history)d.history={};if(!d.alarmLog)d.alarmLog={};return d}}catch(e){}return JSON.parse(JSON.stringify(DEFAULT))}
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+const uid=()=> 't'+Math.random().toString(36).slice(2,8);
+
+/* ================= 跨天与统计 ================= */
+function isWeekend(){const d=new Date().getDay();return d===0||d===6}
+function pad(n){return (n<10?'0':'')+n}
+function dstr(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function ensureDay(){
+  const today=dstr(new Date());
+  if(S.today.date!==today){
+    if(S.today.date){
+      S.yesterdayCompletion=S.today.lastCompletion||0;
+      S.streak=S.yesterdayCompletion>=100?S.streak+1:0;
+      S.history[S.today.date]={c:S.yesterdayCompletion};
+      S.alarmLog={};
+    }
+    S.today={date:today,checked:[],studyDone:[],poolDone:[],redeemed:[],lastCompletion:0};
+    save();
+  }
+}
+function taskList(){return isWeekend()?S.tasks.weekend:S.tasks.weekday}
+function taskDone(t){
+  if(t.pool)return S.today.poolDone.length>=2;
+  if(t.study)return S.today.studyDone.length>=3;
+  return S.today.checked.includes(t.id);
+}
+function completion(){
+  const list=taskList().filter(t=>!t.auto);
+  const done=list.filter(taskDone).length;
+  return Math.round(done/list.length*100);
+}
+function allCoreDone(){return completion()>=100}
+
+/* ================= 星星/动画/音效 ================= */
+let AC;
+function tone(f,d,type){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=.12;o.connect(g);g.connect(AC.destination);o.start();setTimeout(()=>{o.stop()},d)}catch(e){}}
+function chime(){tone(880,.15);setTimeout(()=>tone(1175,.2),120)}
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=1;speechSynthesis.speak(u)}catch(e){}}
+function flyStar(x,y){const el=document.createElement('div');el.className='flystar';el.textContent='⭐';el.style.left=x+'px';el.style.top=y+'px';document.body.appendChild(el);setTimeout(()=>el.remove(),1000)}
+function praise(){return S.praise[Math.floor(Math.random()*S.praise.length)]}
+function confetti(n){const colors=['#ff8fb8','#ffb52e','#a06ee8','#6dd8ff','#7be3a2'];for(let i=0;i<(n||40);i++){const c=document.createElement('div');c.className='confetti';c.style.left=Math.random()*100+'vw';c.style.background=colors[i%colors.length];c.style.animationDuration=(2+Math.random()*2)+'s';c.style.animationDelay=(Math.random()*0.8)+'s';document.getElementById('fx').appendChild(c);setTimeout(()=>c.remove(),5000)}}
+function celebrate(big){confetti(big?80:40);chime();if(big){setTimeout(()=>tone(1319,.3),300)}}
+function gainStars(base,x,y){
+  const amt=base+S.dailyBonus;
+  S.stars+=amt;S.starsTotal+=amt;save();
+  if(x!=null)flyStar(x,y);
+  renderHeader();
+  return amt;
+}
+function distinctCards(){return Object.keys(S.cards).length}
+
+/* ================= 徽章 ================= */
+const BADGES=[
+  {id:'b1',e:'🌅',n:'早起小太阳',d:'城堡报到累计10次',ok:()=>S.counters.report>=10},
+  {id:'b2',e:'🍚',n:'光盘小公主',d:'晚餐打卡累计14次',ok:()=>S.counters.dinner>=14},
+  {id:'b3',e:'🛁',n:'爱干净公主',d:'洗澡打卡累计14次',ok:()=>S.counters.bath>=14},
+  {id:'b4',e:'🎓',n:'学习小达人',d:'学习关卡完成20次',ok:()=>S.counters.study>=20},
+  {id:'b5',e:'📚',n:'故事书虫',d:'睡前绘本累计14次',ok:()=>S.counters.story>=14},
+  {id:'b6',e:'🔥',n:'七日连击',d:'连续7天全勤',ok:()=>S.streak>=7},
+  {id:'b7',e:'💯',n:'完美的一天',d:'当天任务全部完成',ok:()=>allCoreDone()},
+  {id:'b8',e:'🎴',n:'小小收藏家',d:'收集8张不同卡片',ok:()=>distinctCards()>=8},
+  {id:'b9',e:'❄️',n:'传说时刻',d:'抽到一张传说卡',ok:()=>anyRarity(3)},
+  {id:'b10',e:'👑',n:'闪耀公主',d:'累计星星达300',ok:()=>S.starsTotal>=300}
+];
+function anyRarity(r){for(const si in S.series){for(let i=0;i<S.series[si].cards.length;i++){if(S.series[si].cards[i].r===r&&S.cards[si+'-'+i])return true}}return false}
+function checkBadges(){
+  let got=null;
+  BADGES.forEach(b=>{if(!S.badges.includes(b.id)&&b.ok()){S.badges.push(b.id);got=b}});
+  if(got){save();setTimeout(()=>{
+    celebrate(true);say('恭喜获得徽章, '+got.n+'!');
+    openModal('<div style="text-align:center" class="bigpop"><div style="font-size:70px">'+got.e+'</div><h3 style="margin:8px 0">获得徽章!</h3><p style="font-weight:700;color:#c56ef2">'+got.n+'</p><p class="note">'+got.d+'</p><button class="btn" onclick="closeModal()">太棒了!</button></div>');
+  },600)}
+  return got;
+}
+function title(){
+  const s=S.starsTotal;
+  return s>=300?'👑 闪耀公主':s>=150?'🌟 智慧公主':s>=50?'🛡️ 小骑士公主':'🌱 见习公主';
+}
+
+/* ================= 页面渲染 ================= */
+let PAGE='today';
+function renderHeader(){
+  document.getElementById('hStars').textContent=S.stars+' ⭐';
+  document.getElementById('hTitle').textContent=title();
+  document.getElementById('hBonus').textContent=S.dailyBonus>0?('新卡加成 +'+S.dailyBonus):('连续全勤 '+S.streak+' 天 🔥');
+  const sub=document.getElementById('hSub');
+  sub.textContent=isWeekend()?'今天是周末,下午有奖励兑换哦 🎈':'今天也要闪闪发光哦 ✨';
+}
+function renderPage(){
+  ensureDay();
+  renderHeader();
+  const el=document.getElementById('page');
+  if(PAGE==='today')el.innerHTML=vToday();
+  else if(PAGE==='cal')el.innerHTML=vCalendar();
+  else if(PAGE==='draw')el.innerHTML=vDraw();
+  else if(PAGE==='album')el.innerHTML=vAlbum();
+  else if(PAGE==='badges')el.innerHTML=vBadges();
+  else if(PAGE==='shop')el.innerHTML=vShop();
+  document.querySelectorAll('#nav div').forEach(d=>d.classList.toggle('on',d.dataset.p===PAGE));
+}
+/* ---- 今日 ---- */
+function vToday(){
+  const list=taskList();
+  let html='<h2 class="pg">'+(isWeekend()?'🎈 周末安排':'📅 今天的小任务')+' <span style="font-size:12px;color:#b096b5">'+new Date().getMonth()+1+'月'+new Date().getDate()+'日</span></h2>';
+  html+='<div class="card" style="padding:10px 14px"><div style="display:flex;justify-content:space-between;font-size:13px"><b>今日完成度</b><span>'+completion()+'%</span></div><div class="bar"><i style="width:'+completion()+'%"></i></div>';
+  html+='<div style="font-size:12px;margin-top:6px;color:#a98fb0">完成率≥80%可抽卡1次,100%抽2次 🎴'+(S.streak>0?' · 🔥连续全勤'+S.streak+'天':'')+'</div></div>';
+  list.forEach(t=>{
+    const done=taskDone(t);
+    const locked=t.auto&&!allCoreDone();
+    let st=t.stars>0?'<span class="st">+'+t.stars+'⭐</span>':'';
+    let praiseHtml='';
+    if(done&&t.id==='study')praiseHtml='<div class="praise" style="display:block">学习小达人!+'+(S.today.studyStars||0)+'⭐</div>';
+    if(done&&t.pool)praiseHtml='<div class="praise" style="display:block">周末小任务完成!</div>';
+    html+='<div class="task'+(done?' done':'')+(locked?' locked':'')+'">'
+      +'<div class="ic">'+t.icon+'</div><div class="mid"><div class="nm">'+esc(t.name)+'</div><div class="tm">'+esc(t.time||'')+'</div>'+praiseHtml+'</div>'+st
+      +'<div class="chk" onclick="tapTask(\''+t.id+'\')">'+(done?'✓':(locked?'🔒':''))+'</div></div>';
+  });
+  const free=freeDraws();
+  html+='<div class="tipbanner">🎴 今天的抽卡机会:<b>'+free+'</b> 次'+(S.tickets>0?' + 魔法券 '+S.tickets+' 张':'')+' · <a href="javascript:go(\'draw\')" style="color:#c56ef2;font-weight:700">去抽卡 →</a></div>';
+  if(isWeekend())html+='<div class="tipbanner">🎁 下午2点后,记得来奖励商店用星星兑换小奖励哦!</div>';
+  return html;
+}
+function tapTask(id){
+  ensureDay();
+  const t=taskList().find(x=>x.id===id);if(!t)return;
+  if(t.auto){renderPage();return}
+  if(taskDone(t)){renderPage();return}
+  if(t.study){openStudy();return}
+  if(t.pool){openPool();return}
+  S.today.checked.push(id);
+  const cMap={report:'report',dinner:'dinner',bath:'bath',story:'story',sleep:'sleep',wake:'wake',breakfast:'breakfast'};
+  if(cMap[id])S.counters[cMap[id]]=(S.counters[cMap[id]]||0)+1;
+  const amt=gainStars(t.stars,event.clientX,event.clientY);
+  chime();say(praise());
+  S.today.lastCompletion=completion();recordHistory();save();
+  checkBadges();checkPrize();renderPage();
+  toast(t.icon+' '+t.name+' 完成! +'+amt+'⭐ '+praise());
+}
+function toast(msg){
+  const el=document.createElement('div');el.className='bigpop';
+  el.style.cssText='position:fixed;left:50%;top:18%;transform:translateX(-50%);background:#fff;border-radius:16px;padding:12px 20px;font-weight:700;color:#c2569a;box-shadow:0 6px 20px rgba(200,100,180,.4);z-index:400;max-width:80vw;text-align:center';
+  el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),1800);
+}
+/* ---- 学习闯关 ---- */
+function openStudy(){
+  let html='<h3 style="text-align:center">🎓 学习闯关 <span style="color:#c56ef2">'+S.today.studyDone.length+'/3</span></h3><p class="note">点一点完成的关卡,选满3关就过关啦!</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  S.levels.forEach((lv,i)=>{
+    const done=S.today.studyDone.includes(i);
+    html+='<div class="ccard '+(done?'r2':'r1')+'" style="cursor:pointer;padding:14px 6px" onclick="doLevel('+i+')"><div class="ce">'+lv.icon+'</div><div class="cn">'+esc(lv.name)+'</div><div style="font-size:11px;color:#a98fb0;min-height:28px;margin-top:2px">'+esc(lv.desc)+'</div><div class="st" style="display:inline-block;font-size:12px;color:#e88f00;font-weight:700;background:#fff3d6;border-radius:9px;padding:2px 8px">+'+lv.stars+'⭐</div>'+(done?'<div style="color:#ff5fa2;font-weight:700;font-size:12px">已完成 ✓</div>':'')+'</div>';
+  });
+  html+='</div><div style="text-align:center;margin-top:14px"><button class="btn" onclick="closeModal()">关卡地图 ('+S.today.studyDone.length+'/3)</button></div>';
+  openModal(html);
+}
+function doLevel(i){
+  if(S.today.studyDone.includes(i)||S.today.studyDone.length>=3)return;
+  const lv=S.levels[i];
+  S.today.studyDone.push(i);
+  S.counters.study=(S.counters.study||0)+1;
+  const amt=gainStars(lv.stars);
+  chime();say(praise());
+  if(S.today.studyDone.length>=3){
+    S.today.studyStars=amt;
+    if(!S.today.checked.includes('study'))S.today.checked.push('study');
+    S.today.lastCompletion=completion();recordHistory();save();
+    checkBadges();checkPrize();closeModal();renderPage();
+    celebrate();toast('🎓 学习闯关完成! +'+amt+'⭐');
+  }else{save();openStudy();renderPage()}
+}
+/* ---- 周末任务池 ---- */
+function openPool(){
+  let html='<h3 style="text-align:center">🎯 周末小任务 <span style="color:#c56ef2">'+S.today.poolDone.length+'/2</span></h3><p class="note">任选2项完成就可以啦!</p>';
+  S.poolTasks.forEach((p,i)=>{
+    const done=S.today.poolDone.includes(i);
+    html+='<div class="task'+(done?' done':'')+'" onclick="doPool('+i+')"><div class="ic">'+p.icon+'</div><div class="mid"><div class="nm">'+esc(p.name)+'</div></div><span class="st">+'+p.stars+'⭐</span><div class="chk">'+(done?'✓':'')+'</div></div>';
+  });
+  html+='<div style="text-align:center;margin-top:10px"><button class="btn" onclick="closeModal()">好哒</button></div>';
+  openModal(html);
+}
+function doPool(i){
+  if(S.today.poolDone.includes(i))return;
+  const p=S.poolTasks[i];
+  S.today.poolDone.push(i);
+  S.counters.pool=(S.counters.pool||0)+1;
+  const amt=gainStars(p.stars);
+  chime();say(praise());
+  if(S.today.poolDone.length>=2&&!S.today.checked.includes('pool'))S.today.checked.push('pool');
+  S.today.lastCompletion=completion();recordHistory();save();
+  renderPage();
+  if(S.today.poolDone.length>=2){closeModal();checkBadges();checkPrize();celebrate();toast('🎯 周末小任务完成! +'+amt+'⭐')}
+  else openPool();
+}
+/* ---- 抽卡 ---- */
+function freeDraws(){const c=completion();return c>=100?2:c>=80?1:0}
+function drawsLeft(){return freeDraws()+S.tickets}
+function vDraw(){
+  if(!drawsLeft()){
+    return '<h2 class="pg">🎴 魔法抽卡</h2><div class="card" style="text-align:center;padding:30px 16px"><div style="font-size:60px">🔒</div><p style="margin:10px 0;color:#a98fb0">今天的抽卡机会还没解锁哦<br>完成今天 <b>80%</b> 的任务解锁1次<br>全部完成可以抽 <b>2</b> 次!</p><button class="btn" onclick="go(\'today\')">去做任务 →</button><div style="margin-top:10px"><button class="btn gold mini" onclick="buyTicket()">用 10⭐ 买魔法抽卡券</button></div></div>';
+  }
+  return '<h2 class="pg">🎴 魔法抽卡</h2><div class="tipbanner">今天剩余机会:<b>'+(freeDraws()+S.tickets)+'</b> 次'+(S.noNewDays>=3?' · ✨幸运保底生效中,必出新卡!':'')+'</div>'
+    +'<div class="card" style="text-align:center;padding:30px 16px"><div style="font-size:80px" class="bigpop">🎴</div><p style="color:#a98fb0;margin:8px 0">公主集卡册等着新伙伴!<br>⚪普通 · 🔵闪卡 · 🟣传说</p><button class="btn gold" style="font-size:18px;padding:14px 40px" onclick="doDraw()">✨ 抽 卡 ✨</button></div>'
+    +'<div class="note" style="text-align:center">重复的卡会自动变成星星:普通+3 / 闪卡+5 / 传说+10</div>';
+}
+function buyTicket(){
+  if(S.stars<10){toast('星星还不够哦,继续加油!');return}
+  S.stars-=10;S.tickets++;save();renderHeader();renderPage();toast('🎫 买到1张魔法抽卡券!');
+}
+function pickRarity(forceNew){
+  const roll=Math.random();
+  let r=roll<0.06?3:roll<0.30?2:1;
+  const all=[];S.series.forEach((s,si)=>s.cards.forEach((c,ci)=>all.push({si,ci,c})));
+  if(forceNew){
+    let pool=all.filter(x=>x.c.r===r&&!S.cards[x.si+'-'+x.ci]);
+    if(!pool.length){for(const rr of [1,2,3]){pool=all.filter(x=>x.c.r===rr&&!S.cards[x.si+'-'+x.ci]);if(pool.length){r=rr;break}}}
+    if(!pool.length)return null;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  let pool=all.filter(x=>x.c.r===r);
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function doDraw(){
+  if(!drawsLeft())return;
+  if(freeDraws()>0){/* 消耗免费次数,由当日完成率动态决定,无需存储 */}
+  else S.tickets--;
+  const forced=S.noNewDays>=3;
+  const pick=pickRarity(forced);
+  if(!pick){toast('卡池空啦,请家长在家长模式添加新卡');return}
+  const id=pick.si+'-'+pick.ci,card=pick.c;
+  const isDup=!!S.cards[id];
+  S.cards[id]=(S.cards[id]||0)+1;
+  S.counters.draws=(S.counters.draws||0)+1;
+  let starGain=0,msg='';
+  if(isDup){
+    starGain=card.r===3?10:card.r===2?5:3;
+    S.stars+=starGain;S.starsTotal+=starGain;
+    S.noNewDays++;
+    msg='重复卡!自动变成 +'+starGain+'⭐';
+  }else{
+    S.noNewDays=0;
+    S.dailyBonus=Math.min(5,distinctCards());
+    msg='🎉 全新卡片!';
+    if(card.r===3)celebrate(true);else if(card.r===2)celebrate();
+  }
+  save();
+  // 开卡动画
+  const rv=document.getElementById('reveal'),rc=document.getElementById('rcard');
+  rc.className='';rc.innerHTML='🎴<div style="font-size:15px">点我翻开!</div>';
+  rc.style.background='linear-gradient(160deg,#7b4bb8,#c76bd8)';rc.style.boxShadow='0 0 40px rgba(255,160,255,.8)';
+  rv.classList.add('show');
+  rc.onclick=()=>{
+    rc.classList.add('flip');
+    setTimeout(()=>{
+      const bg=card.r===3?'linear-gradient(160deg,#5e2b91,#c76bd8,#ff9ac4)':card.r===2?'linear-gradient(160deg,#2e6fc4,#7cc4ff)':'linear-gradient(160deg,#c98bc9,#e8b8d8)';
+      rc.style.background=bg;
+      rc.style.boxShadow=card.r===3?'0 0 60px rgba(255,120,255,1)':card.r===2?'0 0 40px rgba(110,180,255,.9)':'0 0 25px rgba(255,200,230,.7)';
+      rc.innerHTML='<div class="ce" style="font-size:76px">'+card.e+'</div><div style="font-size:17px;font-weight:700">'+esc(card.n)+'</div><div style="font-size:13px">'+(card.r===3?'🟣 传说卡!':card.r===2?'🔵 闪卡!':'⚪ 普通卡')+'</div><div style="font-size:13px;margin-top:4px">'+msg+'</div>';
+      chime();if(!isDup)say(praise()+'抽到'+card.n+'!');
+      rc.onclick=()=>{rv.classList.remove('show');renderHeader();renderPage();checkBadges();checkPrize();};
+    },400);
+  };
+}
+/* ---- 图鉴 ---- */
+function vAlbum(){
+  let html='<h2 class="pg">📖 公主图鉴</h2>';
+  // 大奖进度
+  const g=S.prize;
+  const s1own=S.series[0]?S.series[0].cards.filter((c,i)=>S.cards['0-'+i]).length:0;
+  const s2own=S.series[1]?S.series[1].cards.filter((c,i)=>S.cards['1-'+i]).length:0;
+  const s1t=S.series[0]?S.series[0].cards.length:10,s2t=S.series[1]?S.series[1].cards.length:10;
+  const allDone=s1own>=s1t&&s2own>=s2t&&S.starsTotal>=g.starGoal;
+  html+='<div class="card" style="background:linear-gradient(135deg,#ffe2f0,#e8dcff)"><div style="text-align:center"><div style="font-size:34px">'+(allDone?'🎉':'🎡')+'</div><b style="font-size:15px">终极大奖: '+esc(g.name)+'</b></div>'
+    +'<div style="font-size:12px;margin-top:8px">🏰 城堡公主 '+s1own+'/'+s1t+'</div><div class="bar"><i style="width:'+(s1own/s1t*100)+'%"></i></div>'
+    +'<div style="font-size:12px;margin-top:8px">🦄 魔法伙伴 '+s2own+'/'+s2t+'</div><div class="bar"><i style="width:'+(s2own/s2t*100)+'%"></i></div>'
+    +'<div style="font-size:12px;margin-top:8px">⭐ 累计星星 '+S.starsTotal+'/'+g.starGoal+' (花掉也不影响哦)</div><div class="bar"><i style="width:'+Math.min(100,S.starsTotal/g.starGoal*100)+'%"></i></div>'
+    +'<div style="text-align:center;font-size:12px;color:#a98fb0;margin-top:6px">三个进度条全部集满,就去'+esc(g.name)+'!</div></div>';
+  S.series.forEach((s,si)=>{
+    const own=s.cards.filter((c,i)=>S.cards[si+'-'+i]).length;
+    html+='<h2 class="pg">'+esc(s.name)+' <span style="font-size:13px;color:#c56ef2">'+own+'/'+s.cards.length+'</span>'+(own>=s.cards.length?' 🎆':'')+'</h2><div class="sgrid">';
+    s.cards.forEach((c,ci)=>{
+      const n=S.cards[si+'-'+ci]||0;
+      html+='<div class="ccard r'+c.r+(n?'':' unknown')+'"><div class="ce">'+c.e+'</div><div class="cn">'+(n?esc(c.n):'???')+'</div>'+(n?'<div class="dup">×'+n+'</div>':'')+'</div>';
+    });
+    html+='</div>';
+  });
+  return html;
+}
+/* ---- 徽章 ---- */
+function vBadges(){
+  let html='<h2 class="pg">👑 成就徽章墙</h2><div class="tipbanner">已点亮 <b>'+S.badges.length+'/'+BADGES.length+'</b> 枚徽章</div><div class="bgrid">';
+  BADGES.forEach(b=>{
+    const got=S.badges.includes(b.id);
+    html+='<div class="badge'+(got?' got':'')+'"><div class="be">'+b.e+'</div><div class="bn">'+b.n+'</div><div class="bd">'+b.d+'</div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+/* ---- 商店 ---- */
+function vShop(){
+  let html='<h2 class="pg">🎁 星星奖励商店</h2><div class="tipbanner">现有星星:<b>'+S.stars+' ⭐</b> · 兑换需要家长确认哦'+(isWeekend()?' · 今天是奖励兑换日!':' · 建议周末兑换')+'</div>';
+  S.shop.forEach((it,i)=>{
+    const can=S.stars>=it.stars;
+    html+='<div class="shopItem"><div class="ic">'+it.icon+'</div><div class="mid"><div class="nm">'+esc(it.name)+'</div><div class="tm">需要 '+it.stars+' ⭐</div></div>'
+      +'<button class="btn mini '+(can?'gold':'gray')+'" onclick="redeem('+i+')">兑换</button></div>';
+  });
+  return html;
+}
+function redeem(i){
+  const it=S.shop[i];
+  if(S.stars<it.stars){toast('星星还不够哦,还差 '+(it.stars-S.stars)+' ⭐!');return}
+  askPassword('请家长输入密码,确认兑换「'+it.name+'」',()=>{
+    S.stars-=it.stars;S.today.redeemed.push(i);save();
+    closeModal();renderPage();confetti(50);
+    toast('🎁 兑换成功!记得兑现承诺哦: '+it.name);
+  });
+}
+/* ---- 大奖 ---- */
+function checkPrize(){
+  if(S.prizeWon)return;
+  const g=S.prize;
+  const ok=S.series.every((s,si)=>s.cards.every((c,ci)=>S.cards[si+'-'+ci]))&&S.starsTotal>=g.starGoal;
+  if(ok){
+    S.prizeWon=true;save();celebrate(true);
+    setTimeout(()=>{
+      say('恭喜小公主!大奖解锁,可以去'+g.name+'啦!');
+      openModal('<div style="text-align:center" class="bigpop"><div style="font-size:80px">🎡✨</div><h2 style="color:#c56ef2;margin:10px 0">大奖解锁!</h2><p style="font-weight:700;font-size:18px">'+esc(g.name)+'</p><p class="note">小公主真的太棒啦!请爸爸妈妈安排出发吧~ 完成后可在家长模式开启新一轮冒险!</p><button class="btn gold" onclick="closeModal()">耶!!!</button></div>');
+    },800);
+  }
+}
+
+/* ================= 日历 · 实时时钟 · 闹钟 ================= */
+let calY=null,calM=null,ringTimer=null;
+function recordHistory(){S.history[S.today.date]={c:completion()}}
+function nextAlarmText(){
+  const now=new Date();const hhmm=pad(now.getHours())+':'+pad(now.getMinutes());
+  const wk=isWeekend();let best=null;
+  S.alarms.forEach(a=>{if(!a.on)return;if(a.r==='wk'&&wk)return;if(a.r==='we'&&!wk)return;if(a.time>hhmm&&(!best||a.time<best.time))best=a});
+  return best?('⏰ 下一个提醒: '+best.time+' '+best.label):'今天没有更多提醒啦 🌙';
+}
+function vCalendar(){
+  const now=new Date();
+  if(calY===null){calY=now.getFullYear();calM=now.getMonth()}
+  const todayK=dstr(now);
+  const first=new Date(calY,calM,1).getDay();
+  const days=new Date(calY,calM+1,0).getDate();
+  let html='<h2 class="pg">📅 公主日历</h2>';
+  html+='<div class="card" style="text-align:center;background:linear-gradient(135deg,#ffe2f0,#e8dcff)"><div id="clock" style="font-size:42px;font-weight:800;color:#c2569a;letter-spacing:2px">'+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds())+'</div><div style="font-size:13px;color:#a98fb0">'+now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日 · 星期'+'日一二三四五六'[now.getDay()]+'</div><div id="nextAlarm" style="font-size:13px;margin-top:4px;color:#8a5fb0">'+nextAlarmText()+'</div></div>';
+  html+='<div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px"><span style="cursor:pointer;font-size:22px;color:#c2569a" onclick="calShift(-1)">‹</span><b>'+(calY+'年'+(calM+1)+'月')+'</b><span style="cursor:pointer;font-size:22px;color:#c2569a" onclick="calShift(1)">›</span></div>';
+  html+='<div class="card"><div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:#b096b5;margin-bottom:4px">'+['日','一','二','三','四','五','六'].map(d=>'<div>'+d+'</div>').join('')+'</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">';
+  for(let i=0;i<first;i++)html+='<div></div>';
+  for(let d=1;d<=days;d++){
+    const dt=new Date(calY,calM,d);const wk=dt.getDay()===0||dt.getDay()===6;
+    const k=dstr(dt);const h=S.history[k];
+    let mark='',bg='';
+    if(h){if(h.c>=100){mark='<div style="font-size:10px">✅</div>';bg='background:#e8f8ee;border-radius:9px'}else if(h.c>=80){mark='<div style="font-size:10px">✨</div>';bg='background:#fff7e0;border-radius:9px'}else{mark='<div style="font-size:10px;color:#e0a0c0">·</div>'}}
+    if(k===todayK)bg='background:#ffe0ee;border:2px solid #ff7ab0;border-radius:9px';
+    html+='<div style="padding:4px 0;cursor:pointer;'+bg+'" onclick="showDay('+calY+','+calM+','+d+')"><div style="font-weight:700;font-size:14px;'+(wk?'color:#e0559a':'')+'">'+d+'</div>'+mark+'</div>';
+  }
+  html+='</div><div style="font-size:11px;color:#a98fb0;margin-top:8px;text-align:center">✅全勤 ✨完成80%+ · 点日期看当天安排</div></div>';
+  html+='<h2 class="pg">⏰ 今日时间线'+(isWeekend()?'（周末版）':'')+'</h2>';
+  taskList().forEach(t=>{html+='<div class="task" style="padding:8px 14px"><div class="ic">'+t.icon+'</div><div class="mid"><div class="nm" style="font-size:14px">'+esc(t.name)+'</div><div class="tm">'+esc(t.time||'')+'</div></div>'+(t.stars?'<span class="st">+'+t.stars+'⭐</span>':'')+'</div>'});
+  return html;
+}
+function calShift(n){calM+=n;if(calM<0){calM=11;calY--}if(calM>11){calM=0;calY++}renderPage()}
+function showDay(y,m,d){
+  const dt=new Date(y,m,d);const wk=dt.getDay()===0||dt.getDay()===6;
+  const list=wk?S.tasks.weekend:S.tasks.weekday;
+  const h=S.history[dstr(dt)];
+  let html='<h3>'+(m+1)+'月'+d+'日 · '+(wk?'🎈 周末安排':'📅 作息安排')+'</h3>';
+  if(h)html+='<p class="note">当天完成度: '+h.c+'%</p>';
+  list.forEach(t=>{html+='<div class="task" style="padding:8px 12px"><div class="ic">'+t.icon+'</div><div class="mid"><div class="nm" style="font-size:14px">'+esc(t.name)+'</div><div class="tm">'+esc(t.time||'')+'</div></div>'+(t.stars?'<span class="st">+'+t.stars+'⭐</span>':'')+'</div>'});
+  html+='<div style="text-align:center;margin-top:10px"><button class="btn" onclick="closeModal()">关闭</button></div>';
+  openModal(html);
+}
+function tick(){
+  const now=new Date();
+  const c=document.getElementById('clock');
+  if(c){c.textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+    const na=document.getElementById('nextAlarm');if(na)na.textContent=nextAlarmText()}
+  ensureDay();
+  const todayK=dstr(now),hhmm=pad(now.getHours())+':'+pad(now.getMinutes());
+  S.alarms.forEach(a=>{
+    if(!a.on||a.time!==hhmm)return;
+    if(a.r==='wk'&&isWeekend())return;
+    if(a.r==='we'&&!isWeekend())return;
+    S.alarmLog[todayK]=S.alarmLog[todayK]||[];
+    if(S.alarmLog[todayK].includes(a.id))return;
+    S.alarmLog[todayK].push(a.id);save();
+    ringAlarm(a);
+  });
+}
+function ringAlarm(a){
+  const play=()=>{tone(988,.15);setTimeout(()=>tone(988,.15),180);setTimeout(()=>tone(1319,.35),360)};
+  play();ringTimer=setInterval(play,1600);
+  const el=document.createElement('div');el.id='ringmask';
+  el.style.cssText='position:fixed;inset:0;background:rgba(120,40,120,.85);z-index:500;display:flex;align-items:center;justify-content:center';
+  el.innerHTML='<div class="bigpop" style="background:#fff;border-radius:24px;padding:30px;text-align:center;max-width:320px"><div class="bell" style="font-size:70px">🔔</div><h3 style="margin:8px 0">'+esc(a.label)+'</h3><div style="font-size:34px;font-weight:800;color:#c2569a">'+a.time+'</div><p class="note">到点啦!</p><button class="btn" onclick="stopRing()">我知道了</button></div>';
+  document.body.appendChild(el);
+  say('叮咚!'+a.label+'时间到啦');
+}
+function stopRing(){clearInterval(ringTimer);ringTimer=null;const el=document.getElementById('ringmask');if(el)el.remove()}
+
+/* ================= 家长模式 ================= */
+let pwdOk=false,pwdCb=null;
+function openParent(){
+  if(pwdOk){parentPanel();return}
+  askPassword('请输入家长密码 (初始:1234)',parentPanel);
+}
+function askPassword(msg,cb){
+  pwdCb=cb;
+  openModal('<h3>🔒 家长验证</h3><p class="note">'+esc(msg)+'</p><input id="pwd" type="password" inputmode="numeric" style="width:100%;border:1.5px solid #e6d5ec;border-radius:10px;padding:10px;font-size:18px;text-align:center" placeholder="密码"><div style="text-align:center;margin-top:12px"><button class="btn" onclick="tryPwd()">确认</button></div>');
+  setTimeout(()=>{const p=document.getElementById('pwd');if(p)p.focus()},100);
+}
+function tryPwd(){
+  const v=document.getElementById('pwd').value;
+  if(v===S.password){const cb=pwdCb;pwdCb=null;cb&&cb()}
+  else{toast('密码不对哦');document.getElementById('pwd').value=''}
+}
+function closeModal(){document.getElementById('mask').classList.remove('show')}
+function openModal(html){document.getElementById('mbody').innerHTML=html;document.getElementById('mask').classList.add('show')}
+let ptab='tasks';
+function parentPanel(){
+  const tabs=[['tasks','📅 作息任务'],['pool','🎯 周末任务'],['levels','🎓 学习关卡'],['shop','🎁 奖励商店'],['cards','🃏 卡池'],['prize','🎡 大奖'],['alarm','⏰ 闹钟'],['data','💾 数据'],['sys','⚙️ 设置']];
+  let html='<h3>👑 家长模式</h3><div class="note">修改后点「保存全部修改」生效。改完记得每周备份数据!</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0">';
+  tabs.forEach(t=>html+='<button class="btn mini '+(ptab===t[0]?'':'gray')+'" onclick="ptab=\''+t[0]+'\';parentPanel()">'+t[1]+'</button>');
+  html+='</div><div style="border-top:1.5px solid #f2e6f6;padding-top:10px">'+pBody()+'</div>';
+  openModal(html);
+}
+function pBody(){
+  if(ptab==='tasks'){
+    let h='<div class="psec"><h4>工作日任务</h4>';
+    S.tasks.weekday.forEach((t,i)=>{h+=prow('tasks.weekday.'+i,t,['icon','name','time','stars'],['图标','名称','时间','⭐'],t.study?'学习关(自动)':'')+'<span style="color:#e0559a;cursor:pointer;font-size:18px" onclick="delItem(\'tasks.weekday\','+i+')">✕</span><br>'});
+    h+='<button class="btn mini" onclick="addItem(\'tasks.weekday\')">➕ 加任务</button></div>';
+    h+='<div class="psec"><h4>周末任务</h4>';
+    S.tasks.weekend.forEach((t,i)=>{h+=prow('tasks.weekend.'+i,t,['icon','name','time','stars'],['图标','名称','时间','⭐'],'')+'<span style="color:#e0559a;cursor:pointer;font-size:18px" onclick="delItem(\'tasks.weekend\','+i+')">✕</span><br>'});
+    h+='<button class="btn mini" onclick="addItem(\'tasks.weekend\')">➕ 加任务</button></div>';
+    return h+pSave();
+  }
+  if(ptab==='pool'){
+    let h='<div class="psec"><h4>周末任务池 (每天任选2项)</h4>';
+    S.poolTasks.forEach((t,i)=>{h+=prow('poolTasks.'+i,t,['icon','name','stars'],['图标','名称','⭐'],'')+'<span style="color:#e0559a;cursor:pointer;font-size:18px" onclick="delItem(\'poolTasks\','+i+')">✕</span><br>'});
+    h+='<button class="btn mini" onclick="addItem(\'poolTasks\')">➕ 加任务</button></div>';
+    return h+pSave();
+  }
+  if(ptab==='levels'){
+    let h='<div class="psec"><h4>学习关卡</h4>';
+    S.levels.forEach((t,i)=>{h+=prow('levels.'+i,t,['icon','name','desc','stars'],['图标','名称','内容','⭐'],'')+'<span style="color:#e0559a;cursor:pointer;font-size:18px" onclick="delItem(\'levels\','+i+')">✕</span><br>'});
+    h+='<button class="btn mini" onclick="addItem(\'levels\')">➕ 加关卡</button></div>';
+    return h+pSave();
+  }
+  if(ptab==='shop'){
+    let h='<div class="psec"><h4>星星奖励商店</h4>';
+    S.shop.forEach((t,i)=>{h+=prow('shop.'+i,t,['icon','name','stars'],['图标','奖励','⭐'],'')+'<span style="color:#e0559a;cursor:pointer;font-size:18px" onclick="delItem(\'shop\','+i+')">✕</span><br>'});
+    h+='<button class="btn mini" onclick="addItem(\'shop\')">➕ 加奖励</button></div>';
+    return h+pSave();
+  }
+  if(ptab==='cards'){
+    let h='';
+    S.series.forEach((s,si)=>{
+      h+='<div class="psec"><h4>'+esc(s.name)+' <span style="color:#e0559a;cursor:pointer" onclick="delItem(\'series\','+si+')">✕删系列</span></h4>';
+      h+='<div class="pf"><span>系列名称</span><input data-p="series.'+si+'.name" value="'+esc(s.name)+'"></div>';
+      s.cards.forEach((c,ci)=>{
+        h+='<div class="prow"><input class="w1" data-p="series.'+si+'.cards.'+ci+'.e" value="'+esc(c.e)+'" title="图标emoji"><input class="w2" data-p="series.'+si+'.cards.'+ci+'.n" value="'+esc(c.n)+'"><select data-p="series.'+si+'.cards.'+ci+'.r" data-t="num"><option value="1"'+(c.r===1?' selected':'')+'>普通</option><option value="2"'+(c.r===2?' selected':'')+'>闪卡</option><option value="3"'+(c.r===3?' selected':'')+'>传说</option></select><span style="color:#e0559a;cursor:pointer" onclick="delItem(\'series.'+si+'.cards\','+ci+')">✕</span></div>';
+      });
+      h+='<button class="btn mini" onclick="addItem(\'series.'+si+'.cards\')">➕ 加卡</button></div>';
+    });
+    h+='<button class="btn mini" onclick="addSeries()">➕ 新系列(下一轮卡池)</button>';
+    return h+pSave();
+  }
+  if(ptab==='prize'){
+    return '<div class="psec"><h4>终极大奖设置</h4>'
+      +'<div class="pf"><span>大奖名称</span><input data-p="prize.name" value="'+esc(S.prize.name)+'"></div>'
+      +'<div class="pf"><span>累计星星目标</span><input data-p="prize.starGoal" data-t="num" value="'+S.prize.starGoal+'"></div>'
+      +'<div class="note">大奖条件 = 所有系列卡片集齐 + 累计星星达标。累计星星花掉不影响进度。</div></div>'+pSave();
+  }
+  if(ptab==='alarm'){
+    let h='<div class="psec"><h4>⏰ 到点响铃提醒</h4><div class="note">时间到时 App 会全屏响铃+语音播报（需 App 处于打开状态）。iPad 锁屏或关闭后不会响，可配合系统自带「时钟→闹钟」兜底。</div>';
+    S.alarms.forEach((a,i)=>{
+      h+='<div class="prow"><input class="w3" type="time" data-p="alarms.'+i+'.time" value="'+esc(a.time)+'"><input class="w2" data-p="alarms.'+i+'.label" value="'+esc(a.label)+'"><select data-p="alarms.'+i+'.r"><option value="every"'+(a.r==='every'?' selected':'')+'>每天</option><option value="wk"'+(a.r==='wk'?' selected':'')+'>工作日</option><option value="we"'+(a.r==='we'?' selected':'')+'>周末</option></select><select data-p="alarms.'+i+'.on" data-t="num"><option value="1"'+(a.on?' selected':'')+'>开</option><option value="0"'+(!a.on?' selected':'')+'>关</option></select><span style="color:#e0559a;cursor:pointer;font-size:18px" onclick="delItem(\'alarms\','+i+')">✕</span></div>';
+    });
+    h+='<button class="btn mini" onclick="addAlarm()">➕ 加闹钟</button></div>';
+    return h+pSave();
+  }
+  if(ptab==='data'){
+    return '<div class="psec"><h4>💾 备份与恢复</h4>'
+      +'<button class="btn" onclick="exportData()">📤 导出备份文件</button><br><br>'
+      +'<label class="btn" style="display:inline-block">📥 导入备份<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>'
+      +'<div class="note">建议每周导出一次,发到微信/云盘保存。换平板或误删后,用「导入备份」一键恢复。</div></div>'
+      +'<div class="psec"><h4>当前统计</h4><div class="note">星星余额 '+S.stars+' ⭐ · 累计 '+S.starsTotal+' ⭐ · 连续全勤 '+S.streak+' 天 · 已收集 '+distinctCards()+' 张卡 · 徽章 '+S.badges.length+'/'+BADGES.length+'</div></div>';
+  }
+  if(ptab==='sys'){
+    return '<div class="psec"><h4>⚙️ 设置</h4>'
+      +'<div class="pf"><span>家长密码</span><input data-p="password" value="'+esc(S.password)+'"></div>'
+      +'<div class="pf"><span>表扬语(逗号分隔)</span><input data-p="praise" value="'+esc(S.praise.join(','))+'"></div></div>'
+      +'<div class="psec"><h4>⚠️ 危险操作</h4><button class="btn" style="background:#e0559a" onclick="resetAll()">清空全部数据,重新开始</button>'
+      +'<div class="note">清空后作息/卡池回到默认,所有进度消失!请先导出备份。</div></div>'+pSave();
+  }
+  return '';
+}
+function prow(path,obj,keys,labels,note){
+  let h='<div class="prow">'+(note?'<span style="font-size:11px;color:#c56ef2;align-self:center">'+note+'</span>':'');
+  keys.forEach((k,i)=>{h+='<input class="'+(k==='stars'||k==='icon'?'w1':'w2')+'" data-p="'+path+'.'+k+'" '+(k==='stars'||k==='stars'?'data-t="num" ':'')+'value="'+esc(obj[k])+'" placeholder="'+labels[i]+'">'});
+  return h+'</div>';
+}
+function pSave(){return '<div style="text-align:center;margin:14px 0"><button class="btn gold" style="padding:12px 30px" onclick="saveParent()">💾 保存全部修改</button></div>'}
+function getPath(path){return path.split('.').reduce((o,k)=>o[k],S)}
+function setPath(path,v){const ks=path.split('.');let o=S;for(let i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks[ks.length-1]]=v}
+function saveParent(){
+  document.querySelectorAll('#modal [data-p]').forEach(el=>{
+    let v=el.value;
+    if(el.dataset.t==='num')v=parseFloat(v)||0;
+    setPath(el.dataset.p,v);
+  });
+  save();closeModal();renderPage();toast('✅ 修改已保存!');
+}
+function addAlarm(){S.alarms.push({id:uid(),time:'12:00',label:'新提醒',on:true,r:'every'});save();parentPanel()}
+function addItem(path){
+  const arr=getPath(path);
+  arr.push(path==='levels'?{icon:'⭐',name:'新关卡',desc:'内容',stars:1}:path==='shop'?{icon:'🎁',name:'新奖励',stars:10}:path==='poolTasks'?{icon:'🎯',name:'新任务',stars:1}:{id:uid(),icon:'⭐',name:'新任务',time:'',stars:1});
+  save();parentPanel();
+}
+function addSeries(){
+  S.series.push({name:'🆕 新系列',cards:[{n:'新卡1',e:'✨',r:1},{n:'新卡2',e:'🌟',r:1},{n:'新卡3',e:'💫',r:1},{n:'新卡4',e:'⭐',r:1},{n:'新卡5',e:'🌙',r:1},{n:'新卡6',e:'🌸',r:1},{n:'新卡7',e:'🦋',r:2},{n:'新卡8',e:'🦄',r:2},{n:'新卡9',e:'👑',r:2},{n:'新卡10',e:'🏰',r:3}]});
+  save();parentPanel();
+}
+function delItem(path,i){getPath(path).splice(i,1);save();parentPanel()}
+function exportData(){
+  const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='小公主乐园备份-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function importData(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.v)throw 0;S=d;save();closeModal();renderPage();toast('✅ 备份已恢复!')}catch(e){toast('文件不对哦,请选择导出的备份文件')}};
+  r.readAsText(f);
+}
+function resetAll(){
+  askPassword('确认清空全部数据?此操作不可恢复!',()=>{
+    S=JSON.parse(JSON.stringify(DEFAULT));save();closeModal();renderPage();toast('已重置');
+  });
+}
+
+/* ================= 导航 ================= */
+function go(p){PAGE=p;renderPage();window.scrollTo(0,0)}
+document.querySelectorAll('#nav div').forEach(d=>d.onclick=()=>go(d.dataset.p));
+document.getElementById('mask').addEventListener('click',e=>{if(e.target.id==='mask')closeModal()});
+
+/* 启动 */
+ensureDay();renderPage();setInterval(tick,1000);
+</script>
+</body>
+</html>
