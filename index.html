@@ -86,8 +86,8 @@ h2.pg{font-size:17px;margin:16px 4px 10px;display:flex;align-items:center;gap:6p
 .confetti{position:absolute;width:10px;height:14px;top:-20px;border-radius:3px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.7}}
 @keyframes pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
-@keyframes flyup{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-90px);opacity:0}}
-.flystar{position:fixed;font-size:26px;z-index:300;animation:flyup 1s forwards;pointer-events:none}
+.flystar{position:fixed;font-size:22px;z-index:300;pointer-events:none;transition:none}
+#starbox.pop{animation:pop .5s}
 .bigpop{animation:pop .5s}
 @keyframes ringk{0%,100%{transform:rotate(0)}25%{transform:rotate(20deg)}75%{transform:rotate(-20deg)}}
 .bell{display:inline-block;animation:ringk .6s infinite}
@@ -133,10 +133,11 @@ h2.pg{font-size:17px;margin:16px 4px 10px;display:flex;align-items:center;gap:6p
 'use strict';
 /* ================= 数据 ================= */
 const KEY='princess_park_v1';
+const APP_VER='v6';
 const DEFAULT={
   v:1,password:'1234',
-  stars:0,starsTotal:0,streak:0,tickets:0,noNewDays:0,prizeWon:false,
-  today:{date:'',checked:[],studyDone:[],poolDone:[],redeemed:[],lastCompletion:0},
+  stars:0,starsTotal:0,streak:0,tickets:0,noNewDays:0,prizeWon:false,voiceURI:null,dailyBonus:0,pwdHint:'',pwdAns:'',
+  today:{date:'',checked:[],studyDone:[],poolDone:[],redeemed:[],lastCompletion:0,freeUsed:0,studyStars:0,earned:{},poolEarned:{}},
   yesterdayCompletion:0,
   cards:{},badges:[],
   counters:{report:0,dinner:0,bath:0,study:0,story:0,sleep:0,wake:0,breakfast:0,pool:0},
@@ -190,9 +191,51 @@ const DEFAULT={
   history:{},alarmLog:{},
   praise:['太棒了,小公主!','哇,又进步啦!','你是最棒的!','公主好厉害!','闪闪发光的你!','继续加油哦,亲爱的!']
 };
-let S=load();
-function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.v===1){if(!d.alarms)d.alarms=JSON.parse(JSON.stringify(DEFAULT.alarms));if(!d.history)d.history={};if(!d.alarmLog)d.alarmLog={};return d}}catch(e){}return JSON.parse(JSON.stringify(DEFAULT))}
-function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+let S;
+(function initData(){
+  let d=null;
+  try{d=JSON.parse(localStorage.getItem(KEY))}catch(e){d=null}
+  if(!d||d.v!==1)d=JSON.parse(JSON.stringify(DEFAULT));
+  const def=JSON.parse(JSON.stringify(DEFAULT));
+  for(const k in def){if(!(k in d))d[k]=def[k]}
+  S=d;
+  normalizeData();
+})();
+function num(v,d){v=Number(v);return isFinite(v)?v:(d||0)}
+function normalizeData(){
+  S.stars=num(S.stars);S.starsTotal=num(S.starsTotal);S.streak=num(S.streak);
+  S.tickets=num(S.tickets);S.noNewDays=num(S.noNewDays);S.dailyBonus=num(S.dailyBonus);
+  S.password=(S.password==null?'':String(S.password));
+  S.pwdHint=(S.pwdHint==null?'':String(S.pwdHint));
+  S.pwdAns=(S.pwdAns==null?'':String(S.pwdAns));
+  if(!Array.isArray(S.praise)||!S.praise.length)S.praise=JSON.parse(JSON.stringify(DEFAULT.praise));
+  else S.praise=S.praise.map(function(p){return String(p==null?'':p)});
+  if(!Array.isArray(S.alarms)||!S.alarms.length)S.alarms=JSON.parse(JSON.stringify(DEFAULT.alarms));
+  if(!S.tasks||typeof S.tasks!=='object')S.tasks={weekday:[],weekend:[]};
+  if(!Array.isArray(S.tasks.weekday))S.tasks.weekday=[];
+  if(!Array.isArray(S.tasks.weekend))S.tasks.weekend=[];
+  if(!Array.isArray(S.poolTasks))S.poolTasks=[];
+  if(!Array.isArray(S.levels))S.levels=[];
+  if(!Array.isArray(S.shop))S.shop=[];
+  if(!Array.isArray(S.cards))S.cards=[];
+  if(!S.history||typeof S.history!=='object')S.history={};
+  if(!S.alarmLog||typeof S.alarmLog!=='object')S.alarmLog={};
+  S.today=S.today||{};
+  ['freeUsed','studyStars','lastCompletion'].forEach(function(k){S.today[k]=num(S.today[k])});
+  ['checked','studyDone','poolDone','redeemed'].forEach(function(k){if(!Array.isArray(S.today[k]))S.today[k]=[]});
+  if(!S.today.earned||typeof S.today.earned!=='object')S.today.earned={};
+  if(!S.today.poolEarned||typeof S.today.poolEarned!=='object')S.today.poolEarned={};
+  for(const k in S.today.earned)S.today.earned[k]=num(S.today.earned[k]);
+  for(const k in S.today.poolEarned)S.today.poolEarned[k]=num(S.today.poolEarned[k]);
+  ['weekday','weekend'].forEach(function(dk){(S.tasks[dk]||[]).forEach(function(t){t.stars=num(t.stars)})});
+  (S.poolTasks||[]).forEach(function(t){t.stars=num(t.stars)});
+  (S.levels||[]).forEach(function(t){t.stars=num(t.stars)});
+  (S.shop||[]).forEach(function(t){t.stars=num(t.stars)});
+  if(S.prize)S.prize.starGoal=num(S.prize.starGoal,300);
+  S.counters=S.counters||{};
+  for(const k in S.counters)S.counters[k]=num(S.counters[k]);
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
 const uid=()=> 't'+Math.random().toString(36).slice(2,8);
 
@@ -209,7 +252,7 @@ function ensureDay(){
       S.history[S.today.date]={c:S.yesterdayCompletion};
       S.alarmLog={};
     }
-    S.today={date:today,checked:[],studyDone:[],poolDone:[],redeemed:[],lastCompletion:0};
+    S.today={date:today,checked:[],studyDone:[],poolDone:[],redeemed:[],lastCompletion:0,freeUsed:0,studyStars:0,earned:{},poolEarned:{}};
     save();
   }
 }
@@ -230,17 +273,46 @@ function allCoreDone(){return completion()>=100}
 let AC;
 function tone(f,d,type){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=.12;o.connect(g);g.connect(AC.destination);o.start();setTimeout(()=>{o.stop()},d)}catch(e){}}
 function chime(){tone(880,.15);setTimeout(()=>tone(1175,.2),120)}
-function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=1;speechSynthesis.speak(u)}catch(e){}}
-function flyStar(x,y){const el=document.createElement('div');el.className='flystar';el.textContent='⭐';el.style.left=x+'px';el.style.top=y+'px';document.body.appendChild(el);setTimeout(()=>el.remove(),1000)}
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';const v=pickVoice();if(v)u.voice=v;u.pitch=1.35;u.rate=0.95;speechSynthesis.speak(u)}catch(e){}}
+let VOICES=[];
+function loadVoices(){try{VOICES=window.speechSynthesis?speechSynthesis.getVoices()||[]:[]}catch(e){VOICES=[]}}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function pickVoice(){
+  if(S.voiceURI){const mv=VOICES.find(function(v){return v.voiceURI===S.voiceURI});if(mv)return mv}
+  const zh=VOICES.filter(function(v){return /zh|cmn/i.test(v.lang)});
+  const pref=['Xiaoxiao','Xiaoyi','Yaoyao','Huihui','Tingting','Ting-Ting','Meijia','Mei-Jia','female','女'];
+  for(let i=0;i<pref.length;i++){const mv=zh.find(function(v){return new RegExp(pref[i],'i').test(v.name)});if(mv)return mv}
+  return zh[0]||null;
+}
+function flyStar(x,y){
+  if(x==null){x=window.innerWidth/2;y=window.innerHeight*0.6}
+  const box=document.getElementById('starbox').getBoundingClientRect();
+  const tx=box.left+box.width/2,ty=box.top+box.height/2;
+  for(let i=0;i<4;i++){
+    (function(i){
+      const el=document.createElement('div');el.className='flystar';el.textContent='⭐';
+      const sx=x+(Math.random()*60-30),sy=y+(Math.random()*40-20);
+      el.style.left=sx+'px';el.style.top=sy+'px';
+      document.body.appendChild(el);
+      setTimeout(function(){
+        el.style.transition='all .7s cubic-bezier(.35,-0.25,.65,1)';
+        el.style.left=tx+'px';el.style.top=ty+'px';el.style.opacity='0.2';el.style.transform='scale(0.4)';
+      },30+i*90);
+      setTimeout(function(){el.remove()},1000+i*90);
+    })(i);
+  }
+  const sb=document.getElementById('starbox');
+  sb.classList.remove('pop');void sb.offsetWidth;sb.classList.add('pop');
+}
 function praise(){return S.praise[Math.floor(Math.random()*S.praise.length)]}
 function confetti(n){const colors=['#ff8fb8','#ffb52e','#a06ee8','#6dd8ff','#7be3a2'];for(let i=0;i<(n||40);i++){const c=document.createElement('div');c.className='confetti';c.style.left=Math.random()*100+'vw';c.style.background=colors[i%colors.length];c.style.animationDuration=(2+Math.random()*2)+'s';c.style.animationDelay=(Math.random()*0.8)+'s';document.getElementById('fx').appendChild(c);setTimeout(()=>c.remove(),5000)}}
 function celebrate(big){confetti(big?80:40);chime();if(big){setTimeout(()=>tone(1319,.3),300)}}
 function gainStars(base,x,y){
-  const amt=base+S.dailyBonus;
-  S.stars+=amt;S.starsTotal+=amt;save();
-  if(x!=null)flyStar(x,y);
+  const bonus=S.dailyBonus||0,total=base+bonus;
+  S.stars+=total;S.starsTotal+=total;save();
+  flyStar(x,y);
   renderHeader();
-  return amt;
+  return {base:base,bonus:bonus,total:total};
 }
 function distinctCards(){return Object.keys(S.cards).length}
 
@@ -275,7 +347,7 @@ function title(){
 /* ================= 页面渲染 ================= */
 let PAGE='today';
 function renderHeader(){
-  document.getElementById('hStars').textContent=S.stars+' ⭐';
+  document.getElementById('hStars').textContent=num(S.stars)+' ⭐';
   document.getElementById('hTitle').textContent=title();
   document.getElementById('hBonus').textContent=S.dailyBonus>0?('新卡加成 +'+S.dailyBonus):('连续全勤 '+S.streak+' 天 🔥');
   const sub=document.getElementById('hSub');
@@ -296,13 +368,14 @@ function renderPage(){
 /* ---- 今日 ---- */
 function vToday(){
   const list=taskList();
-  let html='<h2 class="pg">'+(isWeekend()?'🎈 周末安排':'📅 今天的小任务')+' <span style="font-size:12px;color:#b096b5">'+new Date().getMonth()+1+'月'+new Date().getDate()+'日</span></h2>';
+  let html='<h2 class="pg">'+(isWeekend()?'🎈 周末安排':'📅 今天的小任务')+' <span style="font-size:12px;color:#b096b5">'+(new Date().getMonth()+1)+'月'+new Date().getDate()+'日 · 星期'+'日一二三四五六'[new Date().getDay()]+'</span></h2>';
   html+='<div class="card" style="padding:10px 14px"><div style="display:flex;justify-content:space-between;font-size:13px"><b>今日完成度</b><span>'+completion()+'%</span></div><div class="bar"><i style="width:'+completion()+'%"></i></div>';
   html+='<div style="font-size:12px;margin-top:6px;color:#a98fb0">完成率≥80%可抽卡1次,100%抽2次 🎴'+(S.streak>0?' · 🔥连续全勤'+S.streak+'天':'')+'</div></div>';
   list.forEach(t=>{
     const done=taskDone(t);
     const locked=t.auto&&!allCoreDone();
-    let st=t.stars>0?'<span class="st">+'+t.stars+'⭐</span>':'';
+    const gotE=S.today.earned&&S.today.earned[t.id];
+    let st=t.stars>0?'<span class="st">+'+(num(gotE||t.stars))+'⭐</span>':'';
     let praiseHtml='';
     if(done&&t.id==='study')praiseHtml='<div class="praise" style="display:block">学习小达人!+'+(S.today.studyStars||0)+'⭐</div>';
     if(done&&t.pool)praiseHtml='<div class="praise" style="display:block">周末小任务完成!</div>';
@@ -310,8 +383,8 @@ function vToday(){
       +'<div class="ic">'+t.icon+'</div><div class="mid"><div class="nm">'+esc(t.name)+'</div><div class="tm">'+esc(t.time||'')+'</div>'+praiseHtml+'</div>'+st
       +'<div class="chk" onclick="tapTask(\''+t.id+'\')">'+(done?'✓':(locked?'🔒':''))+'</div></div>';
   });
-  const free=freeDraws();
-  html+='<div class="tipbanner">🎴 今天的抽卡机会:<b>'+free+'</b> 次'+(S.tickets>0?' + 魔法券 '+S.tickets+' 张':'')+' · <a href="javascript:go(\'draw\')" style="color:#c56ef2;font-weight:700">去抽卡 →</a></div>';
+  const left=drawsLeft();
+  html+='<div class="tipbanner">🎴 今天的抽卡机会剩余:<b>'+left+'</b> 次'+(S.tickets>0?'(含魔法券 '+S.tickets+' 张)':'')+' · <a href="javascript:go(\'draw\')" style="color:#c56ef2;font-weight:700">去抽卡 →</a></div>';
   if(isWeekend())html+='<div class="tipbanner">🎁 下午2点后,记得来奖励商店用星星兑换小奖励哦!</div>';
   return html;
 }
@@ -325,11 +398,12 @@ function tapTask(id){
   S.today.checked.push(id);
   const cMap={report:'report',dinner:'dinner',bath:'bath',story:'story',sleep:'sleep',wake:'wake',breakfast:'breakfast'};
   if(cMap[id])S.counters[cMap[id]]=(S.counters[cMap[id]]||0)+1;
-  const amt=gainStars(t.stars,event.clientX,event.clientY);
+  const r=gainStars(t.stars,event.clientX,event.clientY);
+  S.today.earned=S.today.earned||{};S.today.earned[id]=r.total;
   chime();say(praise());
   S.today.lastCompletion=completion();recordHistory();save();
   checkBadges();checkPrize();renderPage();
-  toast(t.icon+' '+t.name+' 完成! +'+amt+'⭐ '+praise());
+  toast(t.icon+' '+t.name+' 完成! +'+num(r.total)+'⭐ '+praise());
 }
 function toast(msg){
   const el=document.createElement('div');el.className='bigpop';
@@ -351,14 +425,14 @@ function doLevel(i){
   const lv=S.levels[i];
   S.today.studyDone.push(i);
   S.counters.study=(S.counters.study||0)+1;
-  const amt=gainStars(lv.stars);
+  const r=gainStars(lv.stars);
+  S.today.studyStars=(S.today.studyStars||0)+r.total;
   chime();say(praise());
   if(S.today.studyDone.length>=3){
-    S.today.studyStars=amt;
     if(!S.today.checked.includes('study'))S.today.checked.push('study');
     S.today.lastCompletion=completion();recordHistory();save();
     checkBadges();checkPrize();closeModal();renderPage();
-    celebrate();toast('🎓 学习闯关完成! +'+amt+'⭐');
+    celebrate();toast('🎓 学习闯关完成! 共 +'+S.today.studyStars+'⭐');
   }else{save();openStudy();renderPage()}
 }
 /* ---- 周末任务池 ---- */
@@ -366,7 +440,8 @@ function openPool(){
   let html='<h3 style="text-align:center">🎯 周末小任务 <span style="color:#c56ef2">'+S.today.poolDone.length+'/2</span></h3><p class="note">任选2项完成就可以啦!</p>';
   S.poolTasks.forEach((p,i)=>{
     const done=S.today.poolDone.includes(i);
-    html+='<div class="task'+(done?' done':'')+'" onclick="doPool('+i+')"><div class="ic">'+p.icon+'</div><div class="mid"><div class="nm">'+esc(p.name)+'</div></div><span class="st">+'+p.stars+'⭐</span><div class="chk">'+(done?'✓':'')+'</div></div>';
+    const gotE=S.today.poolEarned&&S.today.poolEarned[i];
+    html+='<div class="task'+(done?' done':'')+'" onclick="doPool('+i+')"><div class="ic">'+p.icon+'</div><div class="mid"><div class="nm">'+esc(p.name)+'</div></div><span class="st">+'+(gotE||p.stars)+'⭐</span><div class="chk">'+(done?'✓':'')+'</div></div>';
   });
   html+='<div style="text-align:center;margin-top:10px"><button class="btn" onclick="closeModal()">好哒</button></div>';
   openModal(html);
@@ -376,22 +451,24 @@ function doPool(i){
   const p=S.poolTasks[i];
   S.today.poolDone.push(i);
   S.counters.pool=(S.counters.pool||0)+1;
-  const amt=gainStars(p.stars);
+  const r=gainStars(p.stars);
+  S.today.poolEarned=S.today.poolEarned||{};S.today.poolEarned[i]=r.total;
   chime();say(praise());
   if(S.today.poolDone.length>=2&&!S.today.checked.includes('pool'))S.today.checked.push('pool');
   S.today.lastCompletion=completion();recordHistory();save();
   renderPage();
-  if(S.today.poolDone.length>=2){closeModal();checkBadges();checkPrize();celebrate();toast('🎯 周末小任务完成! +'+amt+'⭐')}
+  if(S.today.poolDone.length>=2){closeModal();checkBadges();checkPrize();celebrate();toast('🎯 周末小任务完成! +'+r.total+'⭐')}
   else openPool();
 }
 /* ---- 抽卡 ---- */
 function freeDraws(){const c=completion();return c>=100?2:c>=80?1:0}
-function drawsLeft(){return freeDraws()+S.tickets}
+function freeLeft(){return Math.max(0,freeDraws()-(S.today.freeUsed||0))}
+function drawsLeft(){return freeLeft()+S.tickets}
 function vDraw(){
   if(!drawsLeft()){
     return '<h2 class="pg">🎴 魔法抽卡</h2><div class="card" style="text-align:center;padding:30px 16px"><div style="font-size:60px">🔒</div><p style="margin:10px 0;color:#a98fb0">今天的抽卡机会还没解锁哦<br>完成今天 <b>80%</b> 的任务解锁1次<br>全部完成可以抽 <b>2</b> 次!</p><button class="btn" onclick="go(\'today\')">去做任务 →</button><div style="margin-top:10px"><button class="btn gold mini" onclick="buyTicket()">用 10⭐ 买魔法抽卡券</button></div></div>';
   }
-  return '<h2 class="pg">🎴 魔法抽卡</h2><div class="tipbanner">今天剩余机会:<b>'+(freeDraws()+S.tickets)+'</b> 次'+(S.noNewDays>=3?' · ✨幸运保底生效中,必出新卡!':'')+'</div>'
+  return '<h2 class="pg">🎴 魔法抽卡</h2><div class="tipbanner">今天剩余机会:<b>'+drawsLeft()+'</b> 次'+(S.noNewDays>=3?' · ✨幸运保底生效中,必出新卡!':'')+'</div>'
     +'<div class="card" style="text-align:center;padding:30px 16px"><div style="font-size:80px" class="bigpop">🎴</div><p style="color:#a98fb0;margin:8px 0">公主集卡册等着新伙伴!<br>⚪普通 · 🔵闪卡 · 🟣传说</p><button class="btn gold" style="font-size:18px;padding:14px 40px" onclick="doDraw()">✨ 抽 卡 ✨</button></div>'
     +'<div class="note" style="text-align:center">重复的卡会自动变成星星:普通+3 / 闪卡+5 / 传说+10</div>';
 }
@@ -414,8 +491,8 @@ function pickRarity(forceNew){
 }
 function doDraw(){
   if(!drawsLeft())return;
-  if(freeDraws()>0){/* 消耗免费次数,由当日完成率动态决定,无需存储 */}
-  else S.tickets--;
+  if(freeLeft()>0){S.today.freeUsed=(S.today.freeUsed||0)+1}
+  else{S.tickets--}
   const forced=S.noNewDays>=3;
   const pick=pickRarity(forced);
   if(!pick){toast('卡池空啦,请家长在家长模式添加新卡');return}
@@ -426,7 +503,7 @@ function doDraw(){
   let starGain=0,msg='';
   if(isDup){
     starGain=card.r===3?10:card.r===2?5:3;
-    S.stars+=starGain;S.starsTotal+=starGain;
+    S.stars+=starGain;S.starsTotal+=starGain;renderHeader();
     S.noNewDays++;
     msg='重复卡!自动变成 +'+starGain+'⭐';
   }else{
@@ -601,8 +678,21 @@ function openParent(){
 }
 function askPassword(msg,cb){
   pwdCb=cb;
-  openModal('<h3>🔒 家长验证</h3><p class="note">'+esc(msg)+'</p><input id="pwd" type="password" inputmode="numeric" style="width:100%;border:1.5px solid #e6d5ec;border-radius:10px;padding:10px;font-size:18px;text-align:center" placeholder="密码"><div style="text-align:center;margin-top:12px"><button class="btn" onclick="tryPwd()">确认</button></div>');
+  openModal('<h3>🔒 家长验证</h3><p class="note">'+esc(msg)+'</p><input id="pwd" type="password" style="width:100%;border:1.5px solid #e6d5ec;border-radius:10px;padding:10px;font-size:18px;text-align:center" placeholder="密码"><div style="text-align:center;margin-top:12px"><button class="btn" onclick="tryPwd()">确认</button></div><div style="text-align:right;margin-top:10px"><a href="javascript:forgotPwd()" style="color:#c56ef2;font-size:13px">忘记密码?</a></div>');
   setTimeout(()=>{const p=document.getElementById('pwd');if(p)p.focus()},100);
+}
+function forgotPwd(){
+  if(S.pwdHint){
+    openModal('<h3>🔑 找回密码</h3><p class="note">密码提示:'+esc(S.pwdHint)+'</p><input id="ans" style="width:100%;border:1.5px solid #e6d5ec;border-radius:10px;padding:10px;font-size:16px" placeholder="输入答案"><div style="text-align:center;margin-top:12px"><button class="btn" onclick="checkAns()">确认</button></div>');
+  }else{
+    openModal('<h3>🔑 忘记密码</h3><p class="note">还没有设置「密码提示」,建议进入家长模式后在 ⚙️ 设置里补上。</p><p class="note">找回办法:<br>1. 先试试初始密码 <b>1234</b> 和常用密码;<br>2. 应用部署在 GitHub 的话,家长可在 GitHub 网页上打开 index.html → 点铅笔✏️编辑 → 搜索 password,把后面的值改成 "1234" → 提交,iPad 联网刷新后生效(本地使用则用电脑改文件);<br>3. 最后手段:清除本站数据可重置为初始密码,但打卡进度会清空,请先试前两种。</p><div style="text-align:center"><button class="btn" onclick="closeModal()">知道了</button></div>');
+  }
+}
+function checkAns(){
+  const a=(document.getElementById('ans').value||'').trim().toLowerCase();
+  const r=(S.pwdAns||'').trim().toLowerCase();
+  if(r&&a===r){pwdOk=true;toast('验证成功!请记得修改密码和更新提示');parentPanel()}
+  else toast('答案不对哦');
 }
 function tryPwd(){
   const v=document.getElementById('pwd').value;
@@ -612,11 +702,12 @@ function tryPwd(){
 function closeModal(){document.getElementById('mask').classList.remove('show')}
 function openModal(html){document.getElementById('mbody').innerHTML=html;document.getElementById('mask').classList.add('show')}
 let ptab='tasks';
+function setPtab(t){ptab=t;parentPanel()}
 function parentPanel(){
   const tabs=[['tasks','📅 作息任务'],['pool','🎯 周末任务'],['levels','🎓 学习关卡'],['shop','🎁 奖励商店'],['cards','🃏 卡池'],['prize','🎡 大奖'],['alarm','⏰ 闹钟'],['data','💾 数据'],['sys','⚙️ 设置']];
-  let html='<h3>👑 家长模式</h3><div class="note">修改后点「保存全部修改」生效。改完记得每周备份数据!</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0">';
-  tabs.forEach(t=>html+='<button class="btn mini '+(ptab===t[0]?'':'gray')+'" onclick="ptab=\''+t[0]+'\';parentPanel()">'+t[1]+'</button>');
-  html+='</div><div style="border-top:1.5px solid #f2e6f6;padding-top:10px">'+pBody()+'</div>';
+  let html='<h3>👑 家长模式 <span style="font-size:12px;color:#b096b5">'+APP_VER+'</span></h3><div class="note">修改后点「保存全部修改」生效。改完记得每周备份数据!</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0">';
+  tabs.forEach(t=>html+='<button class="btn mini '+(ptab===t[0]?'':'gray')+'" onclick="setPtab(\''+t[0]+'\')">'+t[1]+'</button>');
+  html+='</div><div style="border-top:1.5px solid #f2e6f6;padding-top:10px">'+(function(){try{return pBody()}catch(e){return '<div class="note" style="color:#d63384">⚠️ 此页内容加载出错:'+esc(e.message)+'<br>请截图发给开发者修复,其他功能不受影响。</div>'}})()+'</div>';
   openModal(html);
 }
 function pBody(){
@@ -682,13 +773,42 @@ function pBody(){
       +'<div class="psec"><h4>当前统计</h4><div class="note">星星余额 '+S.stars+' ⭐ · 累计 '+S.starsTotal+' ⭐ · 连续全勤 '+S.streak+' 天 · 已收集 '+distinctCards()+' 张卡 · 徽章 '+S.badges.length+'/'+BADGES.length+'</div></div>';
   }
   if(ptab==='sys'){
-    return '<div class="psec"><h4>⚙️ 设置</h4>'
-      +'<div class="pf"><span>家长密码</span><input data-p="password" value="'+esc(S.password)+'"></div>'
+    loadVoices();
+    const zhVoices=VOICES.filter(function(v){return /zh|cmn/i.test(v.lang)});
+    return '<div class="psec"><h4>🔊 语音音色</h4>'
+      +'<div class="prow"><select id="voiceSel" data-p="voiceURI" style="flex:1;border:1.5px solid #e6d5ec;border-radius:9px;padding:8px;font-size:14px"><option value=""'+(!S.voiceURI?' selected':'')+'>自动(优选温柔女声)</option>'+zhVoices.map(function(v){return '<option value="'+esc(v.voiceURI)+'"'+(S.voiceURI===v.voiceURI?' selected':'')+'>'+esc(v.name)+'</option>'}).join('')+'</select><button class="btn mini" onclick="testVoice()">▶ 试听</button></div>'
+      +'<div class="note">列表为空时,可在 iPad 设置→辅助功能→朗读内容→声音 里下载中文女声(如 婷婷/小晓)后重开应用。</div></div>'
+      +'<div class="psec"><h4>🔑 修改密码</h4>'
+      +'<div class="pf"><span>新密码</span><input id="np1" type="password" style="border:1.5px solid #e6d5ec;border-radius:9px;padding:8px;font-size:14px"></div>'
+      +'<div class="pf"><span>确认新密码(再输入一次)</span><input id="np2" type="password" style="border:1.5px solid #e6d5ec;border-radius:9px;padding:8px;font-size:14px"></div>'
+      +'<button class="btn mini" onclick="changePwd()">确认修改密码</button>'
+      +'<div class="pf" style="margin-top:10px"><span>密码提示语(忘记密码时显示,如:妈妈生日)</span><input data-p="pwdHint" value="'+esc(S.pwdHint)+'"></div>'
+      +'<div class="pf"><span>提示答案(答对即可进入家长模式)</span><input data-p="pwdAns" value="'+esc(S.pwdAns)+'"></div>'
+      +'<div class="note">忘记密码时,在登录框点「忘记密码?」答对提示即可进入。</div></div>'
+      +'<div class="psec"><h4>✏️ 表扬语</h4>'
       +'<div class="pf"><span>表扬语(逗号分隔)</span><input data-p="praise" value="'+esc(S.praise.join(','))+'"></div></div>'
-      +'<div class="psec"><h4>⚠️ 危险操作</h4><button class="btn" style="background:#e0559a" onclick="resetAll()">清空全部数据,重新开始</button>'
-      +'<div class="note">清空后作息/卡池回到默认,所有进度消失!请先导出备份。</div></div>'+pSave();
+      +'<div class="psec"><h4>🔄 一键复原</h4><button class="btn" style="background:#e0559a" onclick="resetAll()">一键复原(清空全部数据)</button>'
+      +'<div class="note">复原后作息/卡池/进度全部回到初始状态!请先在「💾 数据」里导出备份。需要再次输入家长密码确认。</div></div>'+pSave();
   }
   return '';
+}
+function testVoice(){
+  const sel=document.getElementById('voiceSel');
+  try{
+    const u=new SpeechSynthesisUtterance('公主你好呀,今天也要闪闪发光哦!');
+    u.lang='zh-CN';u.pitch=1.35;u.rate=0.95;
+    const v=VOICES.find(function(v){return v.voiceURI===(sel?sel.value:'')});
+    if(v)u.voice=v;
+    speechSynthesis.cancel();speechSynthesis.speak(u);
+  }catch(e){}
+}
+function changePwd(){
+  const a=document.getElementById('np1').value,b=document.getElementById('np2').value;
+  if(!a){toast('请先输入新密码');return}
+  if(a!==b){toast('两次输入不一致,请检查');return}
+  S.password=a;save();
+  document.getElementById('np1').value='';document.getElementById('np2').value='';
+  toast('✅ 密码已修改,请牢记新密码!');
 }
 function prow(path,obj,keys,labels,note){
   let h='<div class="prow">'+(note?'<span style="font-size:11px;color:#c56ef2;align-self:center">'+note+'</span>':'');
@@ -724,12 +844,12 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.v)throw 0;S=d;save();closeModal();renderPage();toast('✅ 备份已恢复!')}catch(e){toast('文件不对哦,请选择导出的备份文件')}};
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.v)throw 0;S=d;normalizeData();save();closeModal();renderPage();toast('✅ 备份已恢复!')}catch(e){toast('文件不对哦,请选择导出的备份文件')}};
   r.readAsText(f);
 }
 function resetAll(){
-  askPassword('确认清空全部数据?此操作不可恢复!',()=>{
-    S=JSON.parse(JSON.stringify(DEFAULT));save();closeModal();renderPage();toast('已重置');
+  askPassword('确认一键复原?全部进度将清空且不可恢复!',()=>{
+    S=JSON.parse(JSON.stringify(DEFAULT));normalizeData();save();closeModal();renderPage();toast('已复原为初始状态');
   });
 }
 

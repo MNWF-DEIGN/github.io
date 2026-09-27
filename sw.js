@@ -1,6 +1,6 @@
 /* 小公主乐园 - 离线缓存 Service Worker */
 /* 注意: 每次更新应用后, 把下面 CACHE 名里的 v1 改成 v2/v3..., 才能让 iPad 更新到新版 */
-const CACHE = 'princess-park-v1';
+const CACHE = 'princess-park-v7';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
